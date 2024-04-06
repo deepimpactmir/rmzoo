@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals
 
-from rmBitmasks import Form, Reduction
+from rmBitmasks import Reduction
 
 from version_guard import lru_cache, isString
 

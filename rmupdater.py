@@ -28,7 +28,7 @@ import time
 from io import open
 from collections import defaultdict
 
-from version_guard import isString, lru_cache
+from version_guard import isString
 
 import zlib
 
@@ -52,8 +52,8 @@ if version >= 3 and versionPoint >= 3:
 else:
     timekeeper = time.clock
 
-from rmBitmasks import *
-from renderJustification import *
+from rmBitmasks import Form, Reduction, noForm, noReduction
+from renderJustification import printFact, printJustification
 
 RCAprinciple = "RCA"
 
@@ -308,7 +308,24 @@ def standardizeFact(a, op, b):
     return a, op, b
 
 
-from pyparsing import *
+from pyparsing import (
+    Word,
+    alphas,
+    alphanums,
+    Literal,
+    NoMatch,
+    Optional,
+    Group,
+    ZeroOrMore,
+    StringEnd,
+    SkipTo,
+    LineEnd,
+    quotedString,
+    QuotedString,
+    removeQuotes,
+    Suppress,
+    VersionError,
+)
 
 
 def parseResults(resultsString, quiet=False):
@@ -320,7 +337,6 @@ def parseResults(resultsString, quiet=False):
         lambda s, l, t: addPrinciple(t[0])
     )
 
-    parenth = Literal('"')
     justification = QuotedString('"""', multiline=True) | quotedString.setParseAction(
         removeQuotes
     )
@@ -1151,7 +1167,7 @@ def loadDatabase(databaseName, quiet=False):
         setDatabase(pickle.loads(pickledDatabase))
 
 
-from optparse import OptionParser, OptionGroup
+from optparse import OptionParser
 
 
 def main():

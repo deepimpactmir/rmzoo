@@ -37,6 +37,7 @@ except:
     import pickle
 
 from rmupdater import standardizeFact
+from rmBitmasks import Form, Reduction
 
 
 def eprint(*args, **kwargs):
@@ -60,8 +61,7 @@ Date = "16 August 2016"
 Version = "5.1"
 DatabaseVersion = "5.1"
 
-from rmBitmasks import *
-from renderJustification import *
+from renderJustification import printFact, printJustification
 
 _FORM_COLOR = {
     Form.none: "white",
@@ -82,7 +82,7 @@ _CONS_COLOR = {
 
 eprint("\nRM Zoo (v{0})".format(Version))
 
-from optparse import OptionParser, OptionGroup
+from optparse import OptionParser
 
 parser = OptionParser(
     "Usage: %prog [options] [database]", version="%prog {0} ({1})".format(Version, Date)
@@ -507,7 +507,21 @@ if Omissions:
 #
 ##################################################################################
 
-from pyparsing import *
+from pyparsing import (
+    Word,
+    alphas,
+    alphanums,
+    NoMatch,
+    Literal,
+    Optional,
+    Group,
+    StringEnd,
+    Suppress,
+    QuotedString,
+    quotedString,
+    removeQuotes,
+    noForm,
+)
 
 name = Word(alphas + "_+^{}\\$", alphanums + "_+^{}$\\")
 

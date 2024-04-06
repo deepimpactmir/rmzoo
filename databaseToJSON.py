@@ -48,6 +48,7 @@ class Zoo:
     def addNode(
         label, definition="", key=None, uid=None, edges={}, properties={}, tags=[]
     ):
+        global _nextUID
         if uid is None:
             uid = _nextUID
             _nextUID += 1
