@@ -37,7 +37,7 @@ except:
     import pickle
 
 from rmupdater import standardizeFact
-from rmBitmasks import Form, Reduction
+from rmBitmasks import Form, noForm, Reduction
 
 
 def eprint(*args, **kwargs):
@@ -520,7 +520,6 @@ from pyparsing import (
     QuotedString,
     quotedString,
     removeQuotes,
-    noForm,
 )
 
 name = Word(alphas + "_+^{}\\$", alphanums + "_+^{}$\\")

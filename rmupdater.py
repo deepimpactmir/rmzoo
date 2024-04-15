@@ -27,7 +27,6 @@ import time
 
 from io import open
 from collections import defaultdict
-
 from version_guard import isString
 
 import zlib
@@ -324,7 +323,6 @@ from pyparsing import (
     QuotedString,
     removeQuotes,
     Suppress,
-    VersionError,
 )
 
 
@@ -530,7 +528,7 @@ def transitiveClosure(array, opName, clsCtx):
                 continue
 
             for b in principlesList:
-                if b == a or b == c:
+                if b in (a, c):
                     continue
 
                 transitive = acRelation & array[c, b]
@@ -605,7 +603,7 @@ def definitionOfConservation():
                 refCplxCB = 2 + justComplexity[cImpB]
 
                 for a in principlesList:
-                    if a == b or a == c:
+                    if a in (b, c):
                         continue
 
                     frms = formB & conservative[c, a]
@@ -803,7 +801,7 @@ def liftConservation():
                 refCplxCA = 1 + justComplexity[cImpA]
 
                 for b in principlesList:
-                    if b == a or b == c:
+                    if b in (a, c):
                         continue
 
                     for f in Form.list(conservative[c, b]):
@@ -830,7 +828,7 @@ def liftConservation():
                 refCplxBC = 1 + justComplexity[bImpC]
 
                 for a in principlesList:
-                    if a == b or a == c:
+                    if a in (b, c):
                         continue
 
                     for f in Form.list(conservative[a, c]):
