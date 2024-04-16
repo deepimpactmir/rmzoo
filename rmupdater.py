@@ -24,6 +24,7 @@ from __future__ import print_function
 import itertools
 import sys
 import time
+import os
 
 from io import open
 from collections import defaultdict
@@ -35,6 +36,29 @@ try:
     import cPickle as pickle
 except:
     import pickle
+
+from pyparsing import (
+    Word,
+    alphas,
+    alphanums,
+    Literal,
+    NoMatch,
+    Optional,
+    Group,
+    ZeroOrMore,
+    StringEnd,
+    SkipTo,
+    LineEnd,
+    quotedString,
+    QuotedString,
+    removeQuotes,
+    Suppress,
+)
+
+from rmBitmasks import Form, Reduction, noForm, noReduction
+from renderJustification import printFact, printJustification
+
+from optparse import OptionParser
 
 
 def eprint(*args, **kwargs):
@@ -51,8 +75,6 @@ if version >= 3 and versionPoint >= 3:
 else:
     timekeeper = time.clock
 
-from rmBitmasks import Form, Reduction, noForm, noReduction
-from renderJustification import printFact, printJustification
 
 RCAprinciple = "RCA"
 
@@ -305,25 +327,6 @@ def standardizeFact(a, op, b):
             op = (op[0], "-|>")
             a, b = b, a
     return a, op, b
-
-
-from pyparsing import (
-    Word,
-    alphas,
-    alphanums,
-    Literal,
-    NoMatch,
-    Optional,
-    Group,
-    ZeroOrMore,
-    StringEnd,
-    SkipTo,
-    LineEnd,
-    quotedString,
-    QuotedString,
-    removeQuotes,
-    Suppress,
-)
 
 
 def parseResults(resultsString, quiet=False):
@@ -1165,9 +1168,6 @@ def loadDatabase(databaseName, quiet=False):
         setDatabase(pickle.loads(pickledDatabase))
 
 
-from optparse import OptionParser
-
-
 def main():
     absoluteStart = timekeeper()
     eprint("\nRM Zoo (v{0})\n".format(Version))
@@ -1200,8 +1200,6 @@ def main():
 
     if options.quiet and options.verbose:
         parser.error("Options -q and -v are incompatible.")
-
-    import os
 
     resultsFile = args[0]
     if len(args) > 1:

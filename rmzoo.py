@@ -36,6 +36,22 @@ try:
 except:
     import pickle
 
+
+from pyparsing import (
+    Word,
+    alphas,
+    alphanums,
+    NoMatch,
+    Literal,
+    Optional,
+    Group,
+    StringEnd,
+    Suppress,
+    QuotedString,
+    quotedString,
+    removeQuotes,
+)
+
 from rmupdater import standardizeFact
 from rmBitmasks import Form, noForm, Reduction
 
@@ -507,20 +523,6 @@ if Omissions:
 #
 ##################################################################################
 
-from pyparsing import (
-    Word,
-    alphas,
-    alphanums,
-    NoMatch,
-    Literal,
-    Optional,
-    Group,
-    StringEnd,
-    Suppress,
-    QuotedString,
-    quotedString,
-    removeQuotes,
-)
 
 name = Word(alphas + "_+^{}\\$", alphanums + "_+^{}$\\")
 
