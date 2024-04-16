@@ -29,13 +29,10 @@ import os
 from io import open
 from collections import defaultdict
 from version_guard import isString
+from typing import Any, DefaultDict, Type
 
 import zlib
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import pickle
 
 from pyparsing import (
     Word,
@@ -517,7 +514,9 @@ def definitionOfEquivalence():
 
 
 # Uses array, affects array
-def transitiveClosure(array, opName, clsCtx):
+def transitiveClosure(
+    array: DefaultDict[Any, Any], opName: str, clsCtx: Type[Reduction]
+) -> bool:
     # Complete (current) transitive closure of array, using Floyd-Warshall
 
     r = False
