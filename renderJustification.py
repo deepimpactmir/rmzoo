@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals
 
 from rmBitmasks import Reduction
 
-from version_guard import lru_cache, isString
+from functools import cache
 
 _justLineMarker = "*"
 _justIndentMarker = "@"
@@ -15,9 +15,9 @@ def indentJust(jst):
     return jst.replace(justMarker, _justIndented)
 
 
-@lru_cache(maxsize=1024)
+@cache
 def printOp(op):
-    if isString(op):
+    if isinstance(op, str):
         return op
 
     opCtx, opCore = op
@@ -77,13 +77,13 @@ def printJustification(fact, justify, formatted=True):
                     )
                 )
 
-            if isString(jst):
+            if isinstance(jst, str):
                 r = _justFormat.format(printFact(*fact)) + jst
             else:
                 r = _justFormat.format(printFact(*fact)) + "".join(
                     (
                         _justIndented + f
-                        if isString(f)
+                        if isinstance(f, str)
                         else indentJust(printJustification(f, justify, formatted=False))
                     )
                     for f in jst

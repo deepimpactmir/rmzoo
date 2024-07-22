@@ -8,14 +8,10 @@ import itertools
 from io import open
 from collections import defaultdict
 
-from version_guard import isString
 
 import zlib
 
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import pickle
 
 try:
     import ujson as json
@@ -309,7 +305,7 @@ if __name__ == "__main__":
         while toJustify:
             fact, jst, prop = toJustify.pop()
             done = True
-            if isString(jst):
+            if isinstance(jst, str):
                 prop["justification"] = {"weight": 1, "direct": jst}
             elif all(ref in properties for ref in jst):
                 prop["justification"] = {

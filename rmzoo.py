@@ -27,8 +27,6 @@ import itertools
 from io import open
 from collections import defaultdict
 
-from version_guard import isString
-
 import zlib
 
 try:
@@ -584,7 +582,7 @@ if Query:
     Query = query.parseString(Query)
 
     op = Query[1]
-    if not isString(op):
+    if not isinstance(op, str):
         op = tuple(op)
     a, op, b = standardizeFact(Query[0], op, Query[2])
 
@@ -610,6 +608,7 @@ if Query:
             rmupdater.principlesList = sorted(rmupdater.principles)
             rmupdater.deriveInferences(quiet=False)
             setDatabase(rmupdater.getDatabase())
+            # rmupdater.dumpDatabase(databaseName)
 
     jst = queryDatabase(a, op, b)
     if jst:
@@ -676,7 +675,7 @@ if QueryFile:
                 continue
 
             a, op, b = Q
-            if not isString(op):
+            if not isinstance(op, str):
                 op = tuple(op)
                 a, op, b = standardizeFact(a, op, b)
 

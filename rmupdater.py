@@ -28,8 +28,7 @@ import os
 
 from io import open
 from collections import defaultdict
-from version_guard import isString
-from typing import Any, DefaultDict, Type
+from typing import Any, DefaultDict, Tuple, List, Set, Type
 
 import zlib
 import pickle
@@ -58,28 +57,23 @@ from renderJustification import printFact, printJustification
 from optparse import OptionParser
 
 
-def eprint(*args, **kwargs):
+Date: str = "16 August 2016"
+Version: str = "5.1"
+DatabaseVersion: str = "5.1"
+
+timekeeper = time.perf_counter
+
+RCAprinciple: str = "RCA"
+
+principlesList: List[str] = [RCAprinciple]
+principles: Set[str] = set(principlesList)
+
+
+def eprint(*args: Any, **kwargs: Any) -> None:
     print(*args, file=sys.stderr, **kwargs)
 
 
-Date = "16 August 2016"
-Version = "5.1"
-DatabaseVersion = "5.1"
-
-version, versionPoint = sys.version_info[0:2]
-if version >= 3 and versionPoint >= 3:
-    timekeeper = time.perf_counter
-else:
-    timekeeper = time.clock
-
-
-RCAprinciple = "RCA"
-
-principlesList = [RCAprinciple]
-principles = set(principlesList)
-
-
-def addPrinciple(a):
+def addPrinciple(a: str) -> str:
     setA = set(a.split("+"))
     a = "+".join(sorted(setA))
     principles.add(a)
@@ -87,10 +81,10 @@ def addPrinciple(a):
     return a
 
 
-conjunction = {}
+conjunction: dict[Tuple[str, str], str] = {}
 
 
-def joinPrinciples(a, b):
+def joinPrinciples(a: str, b: str) -> str:
     try:
         return conjunction[a, b]
     except KeyError:
@@ -102,55 +96,57 @@ def joinPrinciples(a, b):
         return p
 
 
-equivalent = defaultdict(noReduction)
-implies = defaultdict(noReduction)
-notImplies = defaultdict(noReduction)
+equivalent: DefaultDict[Tuple[str, str], Reduction] = defaultdict(noReduction)
+implies: DefaultDict[Tuple[str, str], Reduction] = defaultdict(noReduction)
+notImplies: DefaultDict[Tuple[str, str], Reduction] = defaultdict(noReduction)
 
 
-def addEquivalent(a, reduction, b):
+def addEquivalent(a: str, reduction: Reduction, b: str) -> None:
     equivalent[a, b] |= Reduction.weaker(reduction)
 
 
-def addReduction(a, reduction, b):
+def addReduction(a: str, reduction: Reduction, b: str) -> None:
     implies[a, b] |= Reduction.weaker(reduction)
 
 
-def addNonReduction(a, reduction, b):
+def addNonReduction(a: str, reduction: Reduction, b: str) -> None:
     notImplies[a, b] |= Reduction.stronger(reduction)
 
 
-conservative = defaultdict(noForm)
-nonConservative = defaultdict(noForm)
+conservative: DefaultDict[Tuple[str, str], Form] = defaultdict(noForm)
+nonConservative: DefaultDict[Tuple[str, str], Form] = defaultdict(noForm)
 
 
-def addConservative(a, frm, b):
+def addConservative(a: str, frm: Form, b: str) -> None:
     conservative[a, b] |= Form.stronger(frm)
 
 
-def addNonConservative(a, frm, b):
+def addNonConservative(a: str, frm: Form, b: str) -> None:
     nonConservative[a, b] |= Form.weaker(frm)
 
 
-form = defaultdict(noForm)
+form: DefaultDict[str, Form] = defaultdict(noForm)
 
-primary = set()
-primaryIndex = []
+primary: Set[str] = set()
+primaryIndex: List[str] = []
 
 
-def addForm(a, frm):
+def addForm(a: str, frm: Form) -> None:
     form[a] |= Form.weaker(frm)
 
 
-def addPrimary(a):
+def addPrimary(a: str) -> None:
     primary.add(a)
     primaryIndex.append(a)
 
 
-justify = {}
-justComplexity = {}
+justify: dict[Tuple[str, Tuple[Any, str], str], Any] = {}
+justComplexity: dict[Tuple[str, Tuple[Any, str], str], int] = {}
 
 
-def updateJustification(fact, jst, cplx):
+def updateJustification(
+    fact: Tuple[str, Tuple[Any, str], str], jst: Any, cplx: int
+) -> bool:
     try:
         if cplx >= justComplexity[fact]:
             return False
@@ -161,28 +157,22 @@ def updateJustification(fact, jst, cplx):
     return True
 
 
-def unoptimizedJustification(fact, jst, cplx):
-    if fact in justify:
-        return False
-    else:
-        justify[fact] = jst
-        return True
-
-
 class UnjustifiedFactError(Exception):
-    def __init__(self, a, op, b):
-        super(UnjustifiedFactError, self).__init__(
-            'The fact "{0}" is not justified.'.format(printFact(a, op, b))
-        )
+    def __init__(self, a: str, op: Tuple[Any, str], b: str):
+        super().__init__(f'The fact "{printFact(a, op, b)}" is not justified.')
 
 
-def addUnjustified(a, op, b):
+def addUnjustified(a: str, op: Tuple[Any, str], b: str) -> None:
     raise UnjustifiedFactError(a, op, b)
 
 
 class ContradictionError(Exception):
-    def __init__(self, fact1, fact2):
-        super(ContradictionError, self).__init__(
+    def __init__(
+        self,
+        fact1: Tuple[str, Tuple[Any, str], str],
+        fact2: Tuple[str, Tuple[Any, str], str],
+    ):
+        super().__init__(
             "The following facts are contradictory:\n\n"
             + printJustification(fact1, justify)
             + "\n\n"
@@ -190,13 +180,7 @@ class ContradictionError(Exception):
         )
 
 
-# Noted side-effects:
-#     Changing '<->' can affect '->'
-#     Changing '->' can affect 'c' and '<->'
-#     Changing 'c' can affect '->'
-#     Changing '-|>' can affect 'nc'
-#     Changing 'nc' can affect '-|>'
-def addFact(a, op, b, jst, cplx):
+def addFact(a: str, op: Tuple[Any, str], b: str, jst: Any, cplx: int) -> bool:
     fact = (a, op, b)
     if not updateJustification(fact, jst, cplx):
         return False
@@ -205,9 +189,7 @@ def addFact(a, op, b, jst, cplx):
     ref = (fact,)
     refCplx = 1 + cplx
 
-    if opCore == "<->":  # equivalence
-        # Symmetry:
-        #     IF (a X<-> b), THEN (b X<-> a).
+    if opCore == "<->":
         updateJustification((b, op, a), jst, cplx)
 
         for x in Reduction.list(Reduction.weaker(opCtx)):
@@ -216,17 +198,13 @@ def addFact(a, op, b, jst, cplx):
             addEquivalent(a, x, b)
             updateJustification((a, newOp, b), ref, refCplx)
 
-            # Symmetry:
-            #     IF (a X<-> b), THEN (b X<-> a).
             addEquivalent(b, x, a)
             updateJustification((b, newOp, a), ref, refCplx)
 
-        # Definition of equivalence:
-        #     IF (a X<-> b), THEN (a X-> b) AND (b X-> a).
         impliesOp = (opCtx, "->")
         addFact(a, impliesOp, b, (fact,), refCplx)
         addFact(b, impliesOp, a, (fact,), refCplx)
-    elif opCore == "->":  # implication
+    elif opCore == "->":
         for x in Reduction.list(Reduction.weaker(opCtx)):
             addReduction(a, x, b)
             updateJustification((a, (x, "->"), b), ref, refCplx)
@@ -242,18 +220,14 @@ def addFact(a, op, b, jst, cplx):
                     newRef = ((a, (x, "->"), b),)
                     newRefCplx = 1 + refCplx
 
-                # Trivial conservation:
-                #     IF (a RCA-> b), THEN (b Fc a).
                 for f in Form:
                     if f != Form.none:
                         addFact(b, (f, "c"), a, newRef, newRefCplx)
 
-        # Definition of conjunction (special case):
-        #     IF (a X-> b), THEN (a X<-> a+b).
         ab = joinPrinciples(a, b)
         if ab is not None:
             addFact(a, (opCtx, "<->"), ab, ref, refCplx)
-    elif opCore == "-|>":  # non-implication
+    elif opCore == "-|>":
         for x in Reduction.list(Reduction.stronger(opCtx)):
             addNonReduction(a, x, b)
             updateJustification((a, (x, "-|>"), b), ref, refCplx)
@@ -269,11 +243,9 @@ def addFact(a, op, b, jst, cplx):
                     newFact = (a, (x, "-|>"), b)
                     newCplx = 2 + refCplx
 
-                # Definition of non-conservation (special case):
-                #     IF (a RCA-|> b) AND (b form F), THEN (b nFc a).
                 for f in Form.list(form[b]):
                     addFact(b, (f, "nc"), a, (newFact, (b, "form", f)), newCplx)
-    elif opCore == "c":  # conservation
+    elif opCore == "c":
         for f in Form.list(Form.stronger(opCtx)):
             newFact = (a, (f, "c"), b)
 
@@ -283,8 +255,6 @@ def addFact(a, op, b, jst, cplx):
             if Form.isPresent(f, nonConservative[a, b]):
                 raise ContradictionError((a, (f, "c"), b), (a, (f, "nc"), b))
 
-            # Definition of conservation (special case):
-            #     IF (a Fc b) AND (a form F), THEN (b RCA-> a).
             if Form.isPresent(f, form[a]):
                 if f == opCtx:
                     newCplx = 1 + refCplx
@@ -292,7 +262,7 @@ def addFact(a, op, b, jst, cplx):
                     newCplx = 2 + refCplx
 
                 addFact(b, (Reduction.RCA, "->"), a, (newFact, (a, "form", f)), newCplx)
-    elif opCore == "nc":  # non-conservation
+    elif opCore == "nc":
         for f in Form.list(Form.weaker(opCtx)):
             addNonConservative(a, f, b)
             updateJustification((a, (f, "nc"), b), ref, refCplx)
@@ -300,20 +270,20 @@ def addFact(a, op, b, jst, cplx):
             if Form.isPresent(f, conservative[a, b]):
                 raise ContradictionError((a, (f, "nc"), b), (a, (f, "c"), b))
 
-        # Trivial conservation (contrapositive):
-        #     IF (a nFc b), THEN (b RCA-|> a).
         addFact(b, (Reduction.RCA, "-|>"), a, ref, refCplx)
     else:
-        raise ValueError("Unrecognized operator: " + opCore)
+        raise ValueError(f"Unrecognized operator: {opCore}")
 
     return True
 
 
-def standardizePrinciple(a):
+def standardizePrinciple(a: str) -> str:
     return "+".join(sorted(set(a.split("+"))))
 
 
-def standardizeFact(a, op, b):
+def standardizeFact(
+    a: str, op: Tuple[Any, str], b: str
+) -> Tuple[str, Tuple[Any, str], str]:
     a = standardizePrinciple(a)
     if op != "form":
         b = standardizePrinciple(b)
@@ -515,7 +485,7 @@ def definitionOfEquivalence():
 
 # Uses array, affects array
 def transitiveClosure(
-    array: DefaultDict[Any, Any], opName: str, clsCtx: Type[Reduction]
+    array: DefaultDict[Any, Reduction], opName: str, clsCtx: Type[Reduction]
 ) -> bool:
     # Complete (current) transitive closure of array, using Floyd-Warshall
 
@@ -1100,9 +1070,6 @@ def getDatabase():
 
 
 def setDatabase(database):
-    if database["version"] != DatabaseVersion:
-        raise VersionError(database["version"], DatabaseVersion)
-
     global principles, principlesList
     principles = database["principles"]
     principlesList = sorted(principles)
@@ -1134,7 +1101,7 @@ def setDatabase(database):
             a, op, b = fact
             if op != "form":
                 jst = justify[fact]
-                if not isString(jst):
+                if not isinstance(jst, str):
                     r += sum(rebuildComplexity(f) for f in jst)
 
             justComplexity[fact] = r

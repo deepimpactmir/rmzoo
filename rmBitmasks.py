@@ -1,8 +1,7 @@
 from __future__ import print_function, unicode_literals
 
 from enum import Enum
-
-from version_guard import lru_cache
+from functools import cache
 
 
 class BitmaskEnum(int, Enum):
@@ -22,7 +21,7 @@ class BitmaskEnum(int, Enum):
         return (x & magic_num) != 0
 
     @classmethod
-    @lru_cache(maxsize=256)
+    @cache
     def strongest(cls, magic_num):
         if magic_num == 0:
             return cls(0)
@@ -30,7 +29,7 @@ class BitmaskEnum(int, Enum):
             return cls(1 << (magic_num.bit_length() - 1))
 
     @classmethod
-    @lru_cache(maxsize=256)
+    @cache
     def weakest(cls, magic_num):
         if magic_num == 0:
             return cls.none
@@ -38,7 +37,7 @@ class BitmaskEnum(int, Enum):
             return cls(magic_num & -magic_num)
 
     @classmethod
-    @lru_cache(maxsize=256)
+    @cache
     def list(cls, magic_num):
         return [x for x in cls if cls.isPresent(x, magic_num)]
 
